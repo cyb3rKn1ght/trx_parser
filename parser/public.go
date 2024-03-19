@@ -24,14 +24,21 @@ func (p *Parser) GetCurrentBlock() int {
 
 func (p *Parser) Subscribe(address string) bool {
 
-	if reg.MatchString(address) {
-		p.mu.Lock()
-		p.addresses[address] = struct{}{}
-		p.mu.Unlock()
-		return true
+	if !reg.MatchString(address) {
+		return false
 	}
 
-	return false
+	p.mu.Lock()
+	p.subscriptions[address] = struct{}{}
+	p.mu.Unlock()
+
+	err := p.saveSubs()
+	if err != nil {
+		log.Println(err)
+		return false
+	}
+
+	return true
 }
 
 func (p *Parser) GetTransactions(address string) []types.Transaction {

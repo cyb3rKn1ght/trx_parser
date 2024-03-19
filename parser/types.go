@@ -12,13 +12,16 @@ type Parser struct {
 	repo           repoReadWriter
 	rpcURL         string // TODO make it a list of RPCs to handle request fails
 	lastBlock      string
+	subsPath       string
 	updateInterval time.Duration
-	addresses      map[string]struct{}
+	subscriptions  map[string]struct{}
 }
 
 type repoReadWriter interface {
-	Read(string) ([]types.Transaction, error)
-	Write(map[string][]types.Transaction) error
+	ReadTrxs(path string) ([]types.Transaction, error)
+	WriteTrxs(trxs map[string][]types.Transaction) error
+	SaveSubs(path string, data map[string]struct{}) error
+	LoadSubs(path string) (map[string]struct{}, error)
 }
 
 type result struct {

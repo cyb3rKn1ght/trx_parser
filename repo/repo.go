@@ -9,14 +9,14 @@ import (
 
 type Repo struct{}
 
-func (r *Repo) Read(address string) ([]types.Transaction, error) {
-	return read(address)
+func (r *Repo) ReadTrxs(path string) ([]types.Transaction, error) {
+	return readTrxs(path)
 }
 
-func (r *Repo) Write(data map[string][]types.Transaction) error {
+func (r *Repo) WriteTrxs(trxs map[string][]types.Transaction) error {
 
-	for addr, newTrxs := range data {
-		trxs, err := read(addr)
+	for addr, newTrxs := range trxs {
+		trxs, err := readTrxs(addr)
 		if err != nil {
 			trxs = newTrxs
 		} else {
@@ -32,9 +32,29 @@ func (r *Repo) Write(data map[string][]types.Transaction) error {
 	return nil
 }
 
-func read(address string) ([]types.Transaction, error) {
+func (r *Repo) SaveSubs(path string, data map[string]struct{}) error {
+	return write(path, data)
+}
 
-	bytes, err := os.ReadFile(address)
+func (r *Repo) LoadSubs(path string) (map[string]struct{}, error) {
+	bytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp map[string]struct{}
+
+	err = json.Unmarshal(bytes, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func readTrxs(path string) ([]types.Transaction, error) {
+
+	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -49,12 +69,12 @@ func read(address string) ([]types.Transaction, error) {
 	return resp, nil
 }
 
-func write(address string, trxs []types.Transaction) error {
+func write(path string, data any) error {
 
-	bytes, err := json.Marshal(trxs)
+	bytes, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(address, bytes, 0700)
+	return os.WriteFile(path, bytes, 0700)
 }

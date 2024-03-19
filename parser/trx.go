@@ -36,12 +36,12 @@ func (p *Parser) checkTrxs() (map[string][]types.Transaction, error) {
 	// p.Subscribe(firstAddr)
 	// fmt.Printf("subscribed %v\n", firstAddr)
 
-	filtered := make(map[string][]types.Transaction, len(p.addresses))
+	filtered := make(map[string][]types.Transaction, len(p.subscriptions))
 
 	for _, trx := range respStruct.Result.Transactions {
 
 		p.mu.RLock()
-		if _, subscribed := p.addresses[trx.To]; subscribed {
+		if _, subscribed := p.subscriptions[trx.To]; subscribed {
 
 			if _, added := filtered[trx.To]; !added {
 				filtered[trx.To] = make([]types.Transaction, 0, 10)

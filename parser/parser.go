@@ -16,7 +16,7 @@ func New(r repoReadWriter, rpc string) Parser {
 		mu:             sync.RWMutex{},
 		repo:           r,
 		rpcURL:         rpc,
-		subsPath:       ".",
+		subsPath:       "subs",
 		subscriptions:  map[string]struct{}{},
 		updateInterval: 2 * time.Second,
 	}
@@ -27,12 +27,10 @@ func New(r repoReadWriter, rpc string) Parser {
 // saves transactions of addresses we are subscribed to
 func (p *Parser) Start() {
 
-	savedSubs, err := p.loadSubs()
+	err := p.loadSubs()
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Fatal(err)
 	}
-
-	p.subscriptions = savedSubs
 
 	ticker := time.NewTicker(p.updateInterval)
 	defer ticker.Stop()
@@ -88,6 +86,14 @@ func (p *Parser) saveSubs() error {
 	return p.repo.SaveSubs(p.subsPath, p.subscriptions)
 }
 
-func (p *Parser) loadSubs() (map[string]struct{}, error) {
-	return p.repo.LoadSubs(p.subsPath)
+func (p *Parser) loadSubs() error {
+
+	savedSubs, err := p.repo.LoadSubs(p.subsPath)
+	if err != nil {
+		return err
+	}
+
+	p.subscriptions = savedSubs
+
+	return nil
 }

@@ -1,8 +1,10 @@
 package parser
 
 import (
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"sync"
 	"time"
 
@@ -14,7 +16,8 @@ func New(r repoReadWriter, rpc string) Parser {
 		mu:             sync.RWMutex{},
 		repo:           r,
 		rpcURL:         rpc,
-		addresses:      map[string]struct{}{},
+		subsPath:       ".",
+		subscriptions:  map[string]struct{}{},
 		updateInterval: 2 * time.Second,
 	}
 }
@@ -23,6 +26,13 @@ func New(r repoReadWriter, rpc string) Parser {
 // and calls transactions fetching and filtering,
 // saves transactions of addresses we are subscribed to
 func (p *Parser) Start() {
+
+	savedSubs, err := p.loadSubs()
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Fatal(err)
+	}
+
+	p.subscriptions = savedSubs
 
 	ticker := time.NewTicker(p.updateInterval)
 	defer ticker.Stop()
@@ -60,8 +70,8 @@ func (p *Parser) Start() {
 	}
 }
 
-func (p *Parser) readTrxs(address string) []types.Transaction {
-	trxs, err := p.repo.Read(address)
+func (p *Parser) readTrxs(path string) []types.Transaction {
+	trxs, err := p.repo.ReadTrxs(path)
 	if err != nil {
 		log.Println(err)
 		return []types.Transaction{}
@@ -71,5 +81,13 @@ func (p *Parser) readTrxs(address string) []types.Transaction {
 }
 
 func (p *Parser) writeTrxs(trxs map[string][]types.Transaction) error {
-	return p.repo.Write(trxs)
+	return p.repo.WriteTrxs(trxs)
+}
+
+func (p *Parser) saveSubs() error {
+	return p.repo.SaveSubs(p.subsPath, p.subscriptions)
+}
+
+func (p *Parser) loadSubs() (map[string]struct{}, error) {
+	return p.repo.LoadSubs(p.subsPath)
 }

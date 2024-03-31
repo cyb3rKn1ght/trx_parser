@@ -36,35 +36,34 @@ func (p *Parser) Start() {
 	defer ticker.Stop()
 
 	for {
-		select {
-		case <-ticker.C:
-			num, err := p.getBlockNum()
+
+		<-ticker.C
+		num, err := p.getBlockNum()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		if p.lastBlock != num {
+			p.lastBlock = num
+
+			// For demo purposes
+			fmt.Printf("current block number %v\n", p.GetCurrentBlock())
+
+			trxs, err := p.checkTrxs()
 			if err != nil {
 				log.Println(err)
 				continue
 			}
 
-			if p.lastBlock != num {
-				p.lastBlock = num
-
-				// For demo purposes
-				fmt.Printf("current block number %v\n", p.GetCurrentBlock())
-
-				trxs, err := p.checkTrxs()
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-
-				err = p.writeTrxs(trxs)
-				if err != nil {
-					log.Println(err)
-					continue
-				}
-
+			err = p.writeTrxs(trxs)
+			if err != nil {
+				log.Println(err)
+				continue
 			}
 
 		}
+
 	}
 }
 
@@ -83,12 +82,12 @@ func (p *Parser) writeTrxs(trxs map[string][]types.Transaction) error {
 }
 
 func (p *Parser) saveSubs() error {
-	return p.repo.SaveSubs(p.subsPath, p.subscriptions)
+	return p.repo.SaveSubs(p.subscriptions)
 }
 
 func (p *Parser) loadSubs() error {
 
-	savedSubs, err := p.repo.LoadSubs(p.subsPath)
+	savedSubs, err := p.repo.LoadSubs()
 	if err != nil {
 		return err
 	}

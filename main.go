@@ -10,7 +10,7 @@ import (
 // uncomment it and transactions will start to save
 func main() {
 
-	p := parser.New(&repo.Repo{}, "https://cloudflare-eth.com")
+	p := parser.New(repo.New(), "https://cloudflare-eth.com")
 
 	p.Start()
 

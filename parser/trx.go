@@ -10,10 +10,9 @@ import (
 // and gathers transactions with needed contracts addresses
 func (p *Parser) checkTrxs() (map[string][]types.Transaction, error) {
 
-	// commented for demo purposes
-	// if len(p.addresses) == 0 {
-	// 	return map[string][]types.Transaction{}, nil
-	// }
+	if len(p.subscriptions) == 0 {
+		return map[string][]types.Transaction{}, nil
+	}
 
 	reqBody := reqRPC{"2.0", "eth_getBlockByNumber", []interface{}{p.lastBlock, true}, 1} // request id may be iterated if needed
 
@@ -30,11 +29,6 @@ func (p *Parser) checkTrxs() (map[string][]types.Transaction, error) {
 	}
 
 	fmt.Printf("transactions count: %v\n", len(respStruct.Result.Transactions))
-
-	// Uncomment to start saving address transactions info
-	// firstAddr := respStruct.Result.Transactions[0].To
-	// p.Subscribe(firstAddr)
-	// fmt.Printf("subscribed %v\n", firstAddr)
 
 	filtered := make(map[string][]types.Transaction, len(p.subscriptions))
 

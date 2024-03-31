@@ -20,8 +20,8 @@ type Parser struct {
 type repoReadWriter interface {
 	ReadTrxs(path string) ([]types.Transaction, error)
 	WriteTrxs(trxs map[string][]types.Transaction) error
-	SaveSubs(path string, data map[string]struct{}) error
-	LoadSubs(path string) (map[string]struct{}, error)
+	SaveSubs(data map[string]struct{}) error
+	LoadSubs() (map[string]struct{}, error)
 }
 
 type result struct {

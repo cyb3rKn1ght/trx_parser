@@ -2,15 +2,29 @@ package repo
 
 import (
 	"encoding/json"
+	"log"
 	"os"
+	"path/filepath"
 
 	"parser/types"
 )
 
-type Repo struct{}
+type Repo struct {
+	subsPath string
+}
 
-func (r *Repo) ReadTrxs(path string) ([]types.Transaction, error) {
-	return readTrxs(path)
+func New() *Repo {
+
+	err := os.MkdirAll("storage", 0700)
+	if err != nil {
+		log.Println(err)
+	}
+
+	return &Repo{subsPath: filepath.Join("storage", "subs")}
+}
+
+func (r *Repo) ReadTrxs(address string) ([]types.Transaction, error) {
+	return readTrxs(address)
 }
 
 func (r *Repo) WriteTrxs(trxs map[string][]types.Transaction) error {
@@ -32,12 +46,12 @@ func (r *Repo) WriteTrxs(trxs map[string][]types.Transaction) error {
 	return nil
 }
 
-func (r *Repo) SaveSubs(path string, data map[string]struct{}) error {
-	return write(path, data)
+func (r *Repo) SaveSubs(data map[string]struct{}) error {
+	return write(r.subsPath, data)
 }
 
-func (r *Repo) LoadSubs(path string) (map[string]struct{}, error) {
-	bytes, err := os.ReadFile(path)
+func (r *Repo) LoadSubs() (map[string]struct{}, error) {
+	bytes, err := os.ReadFile(r.subsPath)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +66,9 @@ func (r *Repo) LoadSubs(path string) (map[string]struct{}, error) {
 	return resp, nil
 }
 
-func readTrxs(path string) ([]types.Transaction, error) {
+func readTrxs(address string) ([]types.Transaction, error) {
 
-	bytes, err := os.ReadFile(path)
+	bytes, err := os.ReadFile(address)
 	if err != nil {
 		return nil, err
 	}

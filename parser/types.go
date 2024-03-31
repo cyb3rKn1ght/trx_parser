@@ -8,13 +8,17 @@ import (
 )
 
 type Parser struct {
-	mu             sync.RWMutex
+	mu             *sync.RWMutex
 	repo           repoReadWriter
 	rpcURL         string // TODO make it a list of RPCs to handle request fails
 	lastBlock      string
-	subsPath       string
 	updateInterval time.Duration
-	subscriptions  map[string]struct{}
+	subsManager    SubsManager
+}
+
+type SubsManager struct {
+	mu            *sync.RWMutex
+	subscriptions map[string]struct{}
 }
 
 type repoReadWriter interface {

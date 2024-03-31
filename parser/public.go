@@ -13,6 +13,16 @@ func (p *Parser) GetCurrentBlock() int {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
+	if p.lastBlock == "" {
+		lustBlock, err := p.getBlockNum()
+		if err != nil {
+			log.Println(err)
+			return -1
+		}
+
+		p.lastBlock = lustBlock
+	}
+
 	parsedBlockNum, err := strconv.ParseInt(p.lastBlock, 0, 64)
 	if err != nil {
 		log.Println(err)
@@ -28,9 +38,9 @@ func (p *Parser) Subscribe(address string) bool {
 		return false
 	}
 
-	p.mu.Lock()
-	p.subscriptions[address] = struct{}{}
-	p.mu.Unlock()
+	p.subsManager.mu.Lock()
+	p.subsManager.subscriptions[address] = struct{}{}
+	p.subsManager.mu.Unlock()
 
 	err := p.saveSubs()
 	if err != nil {

@@ -13,11 +13,10 @@ import (
 
 func New(r repoReadWriter, rpc string) Parser {
 	return Parser{
-		mu:             sync.RWMutex{},
+		mu:             &sync.RWMutex{},
 		repo:           r,
 		rpcURL:         rpc,
-		subsPath:       "subs",
-		subscriptions:  map[string]struct{}{},
+		subsManager:    SubsManager{mu: &sync.RWMutex{}, subscriptions: map[string]struct{}{}},
 		updateInterval: 2 * time.Second,
 	}
 }
@@ -82,7 +81,7 @@ func (p *Parser) writeTrxs(trxs map[string][]types.Transaction) error {
 }
 
 func (p *Parser) saveSubs() error {
-	return p.repo.SaveSubs(p.subscriptions)
+	return p.repo.SaveSubs(p.subsManager.subscriptions)
 }
 
 func (p *Parser) loadSubs() error {
@@ -92,7 +91,7 @@ func (p *Parser) loadSubs() error {
 		return err
 	}
 
-	p.subscriptions = savedSubs
+	p.subsManager.subscriptions = savedSubs
 
 	return nil
 }

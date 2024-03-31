@@ -10,7 +10,7 @@ import (
 // and gathers transactions with needed contracts addresses
 func (p *Parser) checkTrxs() (map[string][]types.Transaction, error) {
 
-	if len(p.subscriptions) == 0 {
+	if len(p.subsManager.subscriptions) == 0 {
 		return map[string][]types.Transaction{}, nil
 	}
 
@@ -30,12 +30,12 @@ func (p *Parser) checkTrxs() (map[string][]types.Transaction, error) {
 
 	fmt.Printf("transactions count: %v\n", len(respStruct.Result.Transactions))
 
-	filtered := make(map[string][]types.Transaction, len(p.subscriptions))
+	filtered := make(map[string][]types.Transaction, len(p.subsManager.subscriptions))
 
 	for _, trx := range respStruct.Result.Transactions {
 
-		p.mu.RLock()
-		if _, subscribed := p.subscriptions[trx.To]; subscribed {
+		p.subsManager.mu.RLock()
+		if _, subscribed := p.subsManager.subscriptions[trx.To]; subscribed {
 
 			if _, added := filtered[trx.To]; !added {
 				filtered[trx.To] = make([]types.Transaction, 0, 10)
@@ -43,7 +43,7 @@ func (p *Parser) checkTrxs() (map[string][]types.Transaction, error) {
 
 			filtered[trx.To] = append(filtered[trx.To], trx)
 		}
-		p.mu.RUnlock()
+		p.subsManager.mu.RUnlock()
 	}
 
 	return filtered, nil
